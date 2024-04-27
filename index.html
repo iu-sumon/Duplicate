@@ -1,0 +1,15 @@
+<select id="select_{{table_id}}" onchange="load_watchlist(this.value, this.id)" class="user_watchlists custom-select-drop">
+    <option disabled value="List">List</option>
+    <option value="favorite">Favorite</option>
+    <option disabled value="All instrument">All instrument</option>
+    <option value="BOND (Public)">BOND (Public)</option>
+    <option value="SC">SC</option>
+    <option value="ATB">ATB</option>
+    <option disabled value="BOND (Public)">BOND (Public)</option>
+    <option value="SPOT Mkt">SPOT Mkt</option>
+    <option value="BLOCK">BLOCK</option>
+    <option value="zcategory">Z Category</option>
+    {% for result in results %}
+    <option value="{{ result }}">{{ result }}</option>
+    {% endfor %}
+</select>
