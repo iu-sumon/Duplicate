@@ -1,0 +1,380 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/resizeColumn.css') }}"/>
+<style>
+    /* .watchlist_ticker:hover{
+        background-color: var(--table-hover-bg);
+    } */
+    .watchlist_ticker.clicked {
+        border: 2px solid var(--nav-active-color);
+        background-color: var(--navbar-active-bg);
+    }
+   
+    .wlremove:hover{
+       color: rgb(0, 203, 230);
+    }
+    .wlremove{
+        background-color: rgb(255,255,255,0);
+        border: 0;
+        color: var(--font-muted);
+    }
+    .ticker_name{
+        background-color: inherit;
+        border: 0;
+        /* color: var(--font-color); */
+    }
+    .ticker_name:focus{
+        outline: 0;
+        line-height: 0.7rem;
+    }
+    .watchlist_table{
+        white-space: nowrap;
+        width: 100%;
+    }
+    .watchlist_dropdown .dropdown-item {
+        color: var(--font-muted);
+        background-color: var(--select-bg);
+        border: 1px solid  var(--gridstack-border);
+        padding-top: 0.1rem;
+        padding-bottom: 0.1rem;
+    }
+    .watchlist_dropdown .dropdown-item:hover {
+        color:black;
+        background-color:var(--nav-active-color);
+    }
+    /*------------Dropdown Style----------- */
+ 
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: var(--dropdown-bg-color);
+        min-width: 100px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        border-radius: 5px;
+        padding: 5px;
+    }
+    .dropdown-zindex
+    {
+        z-index: 99999;
+    }
+    .dropdown-content a {
+        display: block;
+        padding: 5px 10px;
+        text-decoration: none;
+        color: #000;
+        cursor: pointer;
+    }
+    .dropdown-content a:hover {
+        background-color: #ddd;
+    }
+    .show-dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .column-checkbox {
+        margin: 5px;
+    }
+
+    .col-check-container
+    {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        padding: 4px;
+    }
+ 
+    .watchlist-drop
+    {
+        padding: 4px 10px 4px 10px;
+        color: var(--font-muted);
+        background-color: var(--select-bg-menu);
+        box-shadow: 0 0 black;
+        border: 1px solid #97a6b36b;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    .web-col-dropdown-container
+    {
+        position: relative;
+        width: 109px;
+    }
+
+    .web-col-dropdown-watch
+   {
+        border: 1px solid #97a6b36b;
+        border-radius: 4px;
+        padding: 2px 19px 3px 19px;
+        background-color: var(--select-bg-menu);
+        color: var(--font-muted);
+        box-shadow: 0 0 black;
+        text-align: center;
+        font-size: 0.8rem;
+  }
+
+  .watch_bid_bg{
+    background-color: rgb(10 167 147 / 15%) !important;
+  }
+  
+  .watch_ask_bg{
+    background-color: rgb(232 93 93 / 15%) !important;
+
+  }
+
+  .ui-state-highlight {
+      background-color: rgba(126, 125, 123, 0.7) !important;  
+      border: 2px dotted #ccc;   
+      opacity: 1.5;
+    }
+
+    .dragging-shadow { 
+      box-shadow: 0px 1px 2px 2px rgba(148, 148, 147, 0.7);
+    }
+
+    .watchlist_table .rc-cow{
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .watchlist_table .rc-ciw{
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+        -webkit-box-sizing: border-box;
+          -moz-box-sizing: border-box;
+                box-sizing: border-box;
+        -moz-text-overflow: ellipsis;        
+        -ms-text-overflow: ellipsis;
+          -o-text-overflow: ellipsis;
+    } 
+
+    .watchlist_table{
+     table-layout: fixed;
+    }
+
+    .watchlist_table td div, th{
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      -moz-text-overflow: ellipsis;        
+        -ms-text-overflow: ellipsis;
+          -o-text-overflow: ellipsis;
+    } 
+
+    .watchlist_table thead th:hover{
+      cursor: pointer;
+      background-color: #80808033;
+      border-radius: 4px;
+    }
+
+
+</style>
+    <div style="position:sticky; z-index:10; top:0;" class="widget-menu widget-menu-front-size row p-2">
+      <div class="col-1" align="center" style="margin-top: 1.6px;">
+        <a class="watchlist-drop" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="Watchlist Options"><i class="fa fa-bars"></i></a>
+        <div class="dropdown-menu p-0 m-0">
+          <ul class="watchlist_dropdown p-0 m-0">
+            <li id="create_{{table_id}}" class="dropdown-item" onclick="create_watchlist(this.id)">Create Watchlist</li>
+            <li id="remove_{{table_id}}" class="dropdown-item" title="Remove Selected Watchlist" onclick="delete_watchlist(this.id)">Remove Selected Watchlist</li>
+            <!-- <li class="dropdown-item" onclick="watchlist_view('basic')">Watchlist Basic</li>
+            <li class="dropdown-item" onclick="watchlist_view('advanced')">Watchlist Advanced</li>
+            <li class="dropdown-item" onclick="watchlist_view('screener')">Watchlist Screener</li> -->
+          </ul>
+        </div>
+      </div>
+      <div class="col-3">
+        <meta name="watchlist_table_id" data-content="{{table_id}}">
+        <select id="select_{{table_id}}" onchange="load_watchlist(this.value, this.id, null)" class="user_watchlists custom-select-drop">
+            <option disabled value="List">List</option>
+            <option value="Favorite">Favorite</option>
+            <option disabled value="All instrument">All instrument</option>
+            <option value="BOND (Public)">BOND (Public)</option>
+            <option value="SC">SC</option>
+            <option value="ATB">ATB</option>
+            <option disabled value="BOND (Public)">BOND (Public)</option>
+            <option value="SPOT Mkt">SPOT Mkt</option>
+            <option value="BLOCK">BLOCK</option>
+            <option value="zcategory">Z Category</option>
+            {% for result in results %}
+            <option value="{{ result }}">{{ result }}</option>
+            {% endfor %}
+        </select>
+      </div>
+      <div class="col-5">
+          <input id="add_{{table_id}}" placeholder="Add Symbol to selected watchlist" class="wl-symbol searchbox symbol_input ui-autocomplete-input" type="text" autocomplete="off">
+      </div>
+      <div class="col-3" align="center">
+        <div class="web-col-dropdown-container">
+          <div class="show-dropdown">
+            <span class="web-col-dropdown-watch">Columns <i class="fa fa-columns" aria-hidden="true"></i></span>
+            <div class="dropdown-content dropdown-zindex" style="top:22px; right:0px;">
+  
+            <p hidden class="col-check-container" align="left">
+                    <input  type="checkbox"
+                        class="{{table_id}}-col-checkbox"
+                        data-col="{{table_id}}-col-1"
+                        value="A"
+                        checked disabled/>
+                    <span class="pl-1">A</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                    class="{{table_id}}-col-checkbox"
+                    data-col="{{table_id}}-col-2"
+                    value="Symbol"
+                    checked/>
+                <span class="pl-1">Symbol</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                    class="{{table_id}}-col-checkbox"
+                    data-col="{{table_id}}-col-3"
+                    value="Group"
+                    checked/>
+                <span class="pl-1">Group</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input   type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-4"
+                value="LTP"
+                checked/>
+                <span class="pl-1">LTP</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-5"
+                value="CP"
+                checked/>
+                <span class="pl-1">CP</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-6"
+                value="BQ"
+                checked/>
+                <span class="pl-1">BQ</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-7"
+                value="BID"
+                checked/>
+                <span class="pl-1">BID</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-8"
+                value="ASK"
+                checked/>
+                <span class="pl-1">ASK</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-9"
+                value="AQ"
+                checked/>
+                <span class="pl-1">AQ</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-10"
+                value="HIGH"
+                checked/>
+                <span class="pl-1">HIGH</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-11"
+                value="LOW"
+                checked/>
+                <span class="pl-1">LOW</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-12"
+                value="VOL"
+                checked/>
+                <span class="pl-1">VOL</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-13"
+                value="YCP"
+                checked/>
+                <span class="pl-1">YCP</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-14"
+                value="YVOL"
+                checked/>
+                <span class="pl-1">YVOL</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-15"
+                value="CHG"
+                checked/>
+                <span class="pl-1">CHG</span>
+              </p>
+              <p class="col-check-container" align="left">
+                <input  type="checkbox"
+                class="{{table_id}}-col-checkbox"
+                data-col="{{table_id}}-col-16"
+                value="CHGPER"
+                checked/>
+                <span class="pl-1">%CHG</span>
+              </p>
+            
+            </div> 
+          </div>
+          
+      </div>
+    </div>
+      
+    </div>
+    <div id="web-watchlist-container" class="protected tableFixHead-Portal-Page">
+        <table class="watchlist_table table-dark table-striped" id="{{table_id}}" width="100%"  border="0" cellpadding="0" cellspacing="0">
+            <thead style="position: sticky; top: 38px;">
+                <tr>
+                  <th class="{{table_id}}-col-1 sortme" style="text-align: center !important;">-</th>
+                  <th class="{{table_id}}-col-2 sortme" style="text-align: left !important; padding-left: 5px !important;">Symbol</th>
+                  <th class="{{table_id}}-col-3 sortme" style="text-align: center !important;">Group</th>
+                  <th class="{{table_id}}-col-4 sortme ui-sortable-handle" style="text-align: center !important;">LTP</th>
+                  <th class="{{table_id}}-col-5 sortme ui-sortable-handle" style="text-align: center !important;">CP</th>
+                  <th class="{{table_id}}-col-6 sortme ui-sortable-handle" style="text-align: center !important;">BQ</th>
+                  <th class="{{table_id}}-col-7 sortme ui-sortable-handle" style="text-align: center !important;">BID</th>
+                  <th class="{{table_id}}-col-8 sortme ui-sortable-handle" style="text-align: center !important;">ASK</th>
+                  <th class="{{table_id}}-col-9 sortme ui-sortable-handle" style="text-align: center !important;">AQ</th>
+                  <th class="{{table_id}}-col-10 sortme ui-sortable-handle" style="text-align: center !important;">HIGH</th>
+                  <th class="{{table_id}}-col-11 sortme ui-sortable-handle" style="text-align: center !important;">LOW</th>
+                  <th class="{{table_id}}-col-12 sortme ui-sortable-handle" style="text-align: center !important;">VOL</th>
+                  <th class="{{table_id}}-col-13 sortme ui-sortable-handle" style="text-align: center !important;">YCP</th>
+                  <th class="{{table_id}}-col-14 sortme ui-sortable-handle" style="text-align: center !important;">YVOL</th>
+                  <th class="{{table_id}}-col-15 sortme ui-sortable-handle" style="text-align: center !important;">CHG</th>
+                  <th class="{{table_id}}-col-16 sortme ui-sortable-handle" style="text-align: center !important;">%CHG</th>
+                </tr>
+            </thead>
+            <tbody>
+            
+            </tbody>
+        </table> 
+    </div>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/page-js/widgets/web_watchlist.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/store-min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/resizeColumn.js') }}"></script>
+    
+
+    
+
+
